@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAD — Práctica de Tests</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a35;
+    --accent: #00e5b0;
+    --accent2: #ff5c5c;
+    --accent3: #ffd166;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --correct: #00e5b0;
+    --wrong: #ff5c5c;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .score-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    gap: 24px;
+  }
+
+  .score-display span b {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    position: sticky;
+    top: 66px;
+    z-index: 99;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #00b8ff);
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* MAIN */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 0;
+  }
+
+  /* MODULE SELECTOR */
+  #module-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+  }
+
+  .module-header {
+    margin-bottom: 16px;
+  }
+
+  .module-header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .module-header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s;
+  }
+
+  .module-card:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+    transform: translateX(4px);
+  }
+
+  .module-card .mod-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .module-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .module-card .mod-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .btn-all {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-transform: uppercase;
+  }
+
+  .btn-all:hover { background: #00ffc9; transform: translateY(-1px); }
+
+  /* QUIZ */
+  #quiz-screen { display: none; }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .question-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  .module-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(0, 229, 176, 0.1);
+    border: 1px solid rgba(0, 229, 176, 0.25);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+
+  .question-text {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.5;
+  }
+
+  .option-btn .opt-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 16px;
+    padding-top: 3px;
+    transition: color 0.15s;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .option-btn:hover:not(:disabled) .opt-letter {
+    color: var(--accent);
+  }
+
+  .option-btn.selected {
+    border-color: #4a90d9;
+    background: rgba(74, 144, 217, 0.08);
+  }
+
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(0, 229, 176, 0.08);
+    animation: pulse-correct 0.4s ease;
+  }
+
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(255, 92, 92, 0.08);
+    animation: shake 0.4s ease;
+  }
+
+  .option-btn.show-correct {
+    border-color: var(--correct);
+    background: rgba(0, 229, 176, 0.05);
+    opacity: 0.7;
+  }
+
+  .option-btn.correct .opt-letter { color: var(--correct); }
+  .option-btn.wrong .opt-letter { color: var(--wrong); }
+  .option-btn.show-correct .opt-letter { color: var(--correct); }
+
+  @keyframes pulse-correct {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.01); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* FEEDBACK */
+  .feedback-box {
+    display: none;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    border: 1px solid;
+    line-height: 1.5;
+  }
+
+  .feedback-box.correct-fb {
+    border-color: rgba(0, 229, 176, 0.3);
+    background: rgba(0, 229, 176, 0.06);
+    color: var(--correct);
+  }
+
+  .feedback-box.wrong-fb {
+    border-color: rgba(255, 92, 92, 0.3);
+    background: rgba(255, 92, 92, 0.06);
+    color: var(--text);
+  }
+
+  .feedback-box .fb-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .feedback-box.correct-fb .fb-label { color: var(--correct); }
+  .feedback-box.wrong-fb .fb-label { color: var(--wrong); }
+
+  .nav-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-next {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    display: none;
+  }
+
+  .btn-next:hover { background: #00ffc9; transform: translateY(-1px); }
+
+  .btn-skip {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-skip:hover { color: var(--text); border-color: var(--muted); }
+
+  .btn-back {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-back:hover { color: var(--text); border-color: var(--muted); }
+
+  /* RESULTS */
+  #results-screen {
+    display: none;
+    text-align: center;
+    padding: 48px 0;
+  }
+
+  .result-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 32px;
+    position: relative;
+  }
+
+  .result-circle::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 229, 176, 0.15);
+  }
+
+  .result-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .result-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .result-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .result-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .breakdown-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .breakdown-num.correct { color: var(--correct); }
+  .breakdown-num.wrong { color: var(--wrong); }
+  .breakdown-num.neutral { color: var(--muted); }
+
+  .breakdown-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-retry {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-retry:hover { background: #00ffc9; }
+
+  .btn-menu {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-menu:hover { color: var(--text); border-color: var(--muted); }
+
+  /* WRONG REVIEW */
+  .wrong-review {
+    margin-top: 40px;
+    text-align: left;
+  }
+
+  .wrong-review h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--wrong);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .wrong-item {
+    background: var(--surface);
+    border: 1px solid rgba(255, 92, 92, 0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .wrong-item .wi-question {
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .wrong-item .wi-your {
+    color: var(--wrong);
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .wrong-item .wi-correct {
+    color: var(--correct);
+    font-size: 12px;
+  }
+
+  /* Question enter animation */
+  .question-enter {
+    animation: slideIn 0.3s cubic-bezier(.4,0,.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; }
+    main { padding: 32px 16px 0; }
+    .result-breakdown { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .breakdown-card { padding: 14px 10px; }
+    .breakdown-num { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SAD // Tests</div>
+  <div class="score-display" id="header-score" style="display:none">
+    <span>✓ <b id="h-correct">0</b></span>
+    <span>✗ <b id="h-wrong">0</b></span>
+    <span><b id="h-current">0</b>/<b id="h-total">0</b></span>
+  </div>
+</header>
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar"></div></div>
+
+<main>
+
+  <!-- MODULE SELECTOR -->
+  <div id="module-selector">
+    <div class="module-header">
+      <h1>Práctica de Tests</h1>
+      <p>Selecciona un módulo para practicar o practica todos a la vez</p>
+    </div>
+    <button class="btn-all" onclick="startQuiz('all')">▶ Practicar todos los módulos</button>
+    <div id="module-list"></div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen">
+    <div class="question-meta">
+      <div class="question-num" id="q-num">PREGUNTA 1 / 10</div>
+      <div class="module-tag" id="q-module">SAD01</div>
+    </div>
+    <div class="question-text question-enter" id="q-text"></div>
+    <div class="options" id="q-options"></div>
+    <div class="feedback-box" id="feedback-box">
+      <div class="fb-label" id="fb-label"></div>
+      <div id="fb-text"></div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">Siguiente →</button>
+      <button class="btn-skip" id="btn-skip" onclick="skipQuestion()">Saltar</button>
+      <button class="btn-back" onclick="goBack()">← Menú</button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="results-screen">
+    <div class="result-circle">
+      <div class="result-pct" id="res-pct">0%</div>
+      <div class="result-label">nota</div>
+    </div>
+    <div class="result-title" id="res-title">Resultado</div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-breakdown">
+      <div class="breakdown-card"><div class="breakdown-num correct" id="res-correct">0</div><div class="breakdown-label">Correctas</div></div>
+      <div class="breakdown-card"><div class="breakdown-num wrong" id="res-wrong">0</div><div class="breakdown-label">Incorrectas</div></div>
+      <div class="breakdown-card"><div class="breakdown-num neutral" id="res-skip">0</div><div class="breakdown-label">Saltadas</div></div>
+    </div>
+    <div class="result-actions">
+      <button class="btn-retry" onclick="retryQuiz()">↺ Repetir</button>
+      <button class="btn-menu" onclick="showMenu()">← Menú</button>
+    </div>
+    <div class="wrong-review" id="wrong-review"></div>
+  </div>
+
+</main>
+
+<script>
+const ALL_QUESTIONS = [
+  // SAD01
+  { module: 'SAD01', q: 'Existen organismos que se dedican a gestionar todo tipo de incidencias producidas por software, se denominan:', opts: ['CSIT','CERT','CGI','GERT'], correct: 1 },
+  { module: 'SAD01', q: 'Las amenazas pueden ser:', opts: ['Físicas','Físicas y lógicas','Físicas o activas','Lógicas'], correct: 1 },
+  { module: 'SAD01', q: 'La posibilidad de que se materialice o no una amenaza es:', opts: ['La definición de vulnerabilidad','Una definición de riesgo','La definición de ataque','La definición de impacto'], correct: 1 },
+  { module: 'SAD01', q: 'La diferencia entre troyanos, virus y gusanos es:', opts: ['El gusano no debe esperar a que se ejecute ningún fichero','El troyano solamente ralentiza el sistema de red','El gusano no destruye','El troyano no causa ningún daño'], correct: 0 },
+  { module: 'SAD01', q: 'La contraseña "12a3abcA" es más segura que "a%cEr2t". ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD01', q: 'Riesgo para un sistema informático es lo mismo que amenaza. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD01', q: 'Las auditorías de seguridad no están estandarizadas. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD01', q: 'El DNI electrónico:', opts: ['Es una firma electrónica','Contiene una firma electrónica','Encripta la información','Es un certificado electrónico'], correct: 1 },
+  { module: 'SAD01', q: 'Las backdoors son un tipo de malware:', opts: ['Que se instala en el sistema por contagio','Que es una variedad de virus','Que se instala solamente en servidores, facilitando la entrada de otros programas','Creado por los programadores de la aplicación'], correct: 3 },
+  { module: 'SAD01', q: 'Un análisis forense se hace:', opts: ['Sobre un sistema infectado por un virus','Sobre un sistema destruido','Sobre un sistema en el que se ha producido una incidencia de seguridad','Sobre un sistema que no arranca'], correct: 2 },
+  // SAD01 (2nd attempt)
+  { module: 'SAD01', q: 'El mayor porcentaje de infecciones es el producido por:', opts: ['Troyanos','Virus','Adware','Gusanos'], correct: 0 },
+  { module: 'SAD01', q: 'Aunque no haya vulnerabilidades sigue habiendo amenazas. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD01', q: 'La criptografía:', opts: ['Ha surgido con la era de la informática','Tiene como objetivo descifrar la información','Cifra los datos','Comprime los datos'], correct: 2 },
+  { module: 'SAD01', q: 'Un sistema simétrico es:', opts: ['Un sistema con dos claves','Un sistema con una clave','Más seguro que uno asimétrico','Un sistema con una clave privada y otra pública'], correct: 1 },
+  { module: 'SAD01', q: 'El análisis de las vulnerabilidades del sistema puede hacerse on-line. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD01', q: 'Un sistema es seguro si tiene las cualidades de:', opts: ['Fiabilidad, integridad, disponibilidad, confidencialidad y no repudio','Fiabilidad e integridad','Fiabilidad, integridad, disponibilidad, confidencialidad','Definidas en la regla ISO170002'], correct: 0 },
+  { module: 'SAD01', q: 'Un bug es un tipo de malware creado de manera intencionada. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD01', q: 'Uno de los pasos convenientes en el proceso de recuperación de datos es:', opts: ['No dañar el soporte donde se almacenan los datos','Duplicar los datos y trabajar con la copia','Utilizar salas limpias','Realizar el proceso con herramientas software'], correct: 1 },
+  { module: 'SAD01', q: 'Las evidencias digitales:', opts: ['No se pueden recoger, hay que observarlas y describirlas','Permanecen mientras el sistema tenga alimentación eléctrica','Se pierden inmediatamente','Se pueden duplicar'], correct: 3 },
+  { module: 'SAD01', q: 'Un grupo electrógeno:', opts: ['Necesita de la electricidad','Solamente se utiliza en instalaciones industriales grandes','Se alimenta de diesel','Utiliza cualquier tipo de combustible diferente de la electricidad'], correct: 3 },
+  // SAD02
+  { module: 'SAD02', q: 'El escaneo de puertos:', opts: ['Es un método empleado en un tipo de ataque','Es lo mismo que whois','Es un ataque activo','Es una vulnerabilidad'], correct: 0 },
+  { module: 'SAD02', q: 'WPA es más seguro que WEP. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD02', q: 'En un ataque, el protocolo responsable de alterar las tablas de enrutamiento es:', opts: ['ICMP','IP','SMTP','TCP'], correct: 0 },
+  { module: 'SAD02', q: 'Los ataques de fuerza bruta siempre necesitan del diccionario para poder conseguir la clave buscada. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD02', q: 'Cuando se emplean mecanismos de pago como PayPal:', opts: ['PayPal solamente conoce los datos del vendedor','Nadie conoce los datos bancarios de los intervinientes en la transacción','El comprador solamente revela sus datos al vendedor','El comprador solamente revela sus datos a PayPal'], correct: 3 },
+  { module: 'SAD02', q: 'Un diccionario utilizado en un ataque de fuerza bruta:', opts: ['Contiene palabras muy específicas','Solamente contiene contraseñas de encriptación WPA','Contiene palabras o combinaciones de caracteres utilizados comúnmente como contraseñas','Es siempre necesario'], correct: 2 },
+  { module: 'SAD02', q: 'Cross Site Scripting es lo mismo que CSS. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD02', q: 'La diferencia entre troyanos, virus y gusanos es:', opts: ['El gusano no destruye','El gusano no debe esperar a que se ejecute ningún fichero','El troyano no causa ningún daño','El troyano solamente ralentiza el sistema de red'], correct: 1 },
+  { module: 'SAD02', q: 'Enviar un correo electrónico a muchos destinatarios:', opts: ['Es más seguro que enviárselo a un solo destinatario','Es seguro','Es más seguro si se emplea la Copia Oculta','Es más seguro si no se emplea la Copia Oculta'], correct: 2 },
+  { module: 'SAD02', q: 'Si alguien descubre nuestra contraseña del portal de banca online y entra a ver el estado de nuestras cuentas:', opts: ['Se ha producido un ataque activo','Se ha producido un ataque pasivo','Es un ejemplo de seguridad activa','Es un ejemplo de seguridad pasiva'], correct: 1 },
+  { module: 'SAD02', q: 'El spam:', opts: ['Se puede eliminar fácilmente','No consume ancho de banda en la red','Aumenta la posibilidad de infecciones por virus','Se propaga utilizando los servidores SNMP'], correct: 2 },
+  { module: 'SAD02', q: 'Linux es un sistema operativo que no necesita de herramientas preventivas como los antivirus. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD02', q: 'El único servicio de red que puede ser vulnerable es el DNS. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD02', q: 'La identidad digital:', opts: ['Son los rasgos característicos de los usuarios en Internet','Se llama a veces firma digital','Utiliza cifrado asimétrico','Es una representación legal de la identidad'], correct: 0 },
+  { module: 'SAD02', q: '802.1X puede actuar junto con WPA. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD02', q: 'Un ataque por Inyección de código SQL:', opts: ['Se puede producir con combinaciones inesperadas de código','Se produce en todas las bases de datos','Solamente permiten consultar datos','Son necesarias funciones muy específicas'], correct: 0 },
+  { module: 'SAD02', q: 'Un servidor RADIUS:', opts: ['Es imprescindible WEP para poder utilizarlo','Es el responsable de la existencia de los portales cautivos','Es imprescindible WPA para poder utilizarlo','No es necesario que esté en la red local del dispositivo que lo utiliza'], correct: 3 },
+  { module: 'SAD02', q: 'Un exploit siempre está diseñado en lenguaje C. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD02', q: 'Ocultar los caracteres cuando se introduce una contraseña es una medida:', opts: ['De seguridad pasiva','De seguridad física','Innecesaria','De seguridad activa'], correct: 3 },
+  { module: 'SAD02', q: 'El plan de contingencia:', opts: ['Es lo mismo que el manual de seguridad','No estudia las protecciones actuales del sistema','Incluye un análisis de posibles riesgos del sistema','Especifica un plan de recuperación para después de que se produzca el desastre'], correct: 2 },
+  // SAD03
+  { module: 'SAD03', q: 'La defensa interna:', opts: ['Establece las normas en la red interna','Sobre todo filtra el tráfico que viene de la WAN','Es la línea de defensa','Deniega conexiones de la WAN'], correct: 0 },
+  { module: 'SAD03', q: 'Una subred protegida débil:', opts: ['Sitúa a la DMZ detrás de un cortafuegos alojado en un dispositivo con tres interfaces','No tiene equipo bastión','Tiene un equipo bastión sin proteger','Sitúa a la DMZ entre dos cortafuegos'], correct: 0 },
+  { module: 'SAD03', q: 'Se puede acceder vía SSH:', opts: ['A cualquier equipo Linux con la cuenta root','A cualquier equipo si se tiene instalado un cliente SSH','A cualquier equipo utilizando PuTTY','A un servidor SSH donde tengamos autorización'], correct: 3 },
+  { module: 'SAD03', q: 'Una VPN:', opts: ['Cifra y firma la información transmitida','Crea dominios dentro de una LAN de manera virtual','Hace lo mismo que una VLAN','Es la manera de acceder al Escritorio Remoto'], correct: 0 },
+  { module: 'SAD03', q: 'Un servidor de acceso remoto se denomina también RAS. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD03', q: 'La técnica de cifrado utilizada por una VPN:', opts: ['Puede ser simétrica o asimétrica pero es más seguro utilizar la simétrica','Es simétrica','Puede ser simétrica o asimétrica','Es la asimétrica'], correct: 2 },
+  { module: 'SAD03', q: 'Un servidor web público debe instalarse:', opts: ['En el router frontera','En la zona desmilitarizada del perímetro de red','En la LAN','Fuera del perímetro de red'], correct: 1 },
+  { module: 'SAD03', q: 'La seguridad perimetral:', opts: ['Es la establecida por nuestro ISP','Es una medida de software','Se establece mediante software y/o hardware','Es la proporcionada por dispositivos de hardware'], correct: 2 },
+  { module: 'SAD03', q: 'Los IDS:', opts: ['Se emplean dentro de la LAN','Se emplean en la defensa perimetral','Solamente se emplean en la LAN','Solamente se emplean en la DMZ'], correct: 1 },
+  { module: 'SAD03', q: 'La defensa en profundidad:', opts: ['Protege el interior de la LAN por ser el objetivo de un atacante','Intensifica la seguridad en la DMZ del perímetro de red','Establece medidas de seguridad en el trayecto que recorre la información hacia la LAN','Solamente protege el router frontera con medidas de seguridad más fuertes'], correct: 2 },
+  { module: 'SAD03', q: 'El protocolo menos problemático con NAT es:', opts: ['L2TP','PPTP','SSL','IPSec'], correct: 2 },
+  { module: 'SAD03', q: 'Crear una red privada sobre una red pública es:', opts: ['Una VLAN','Una VPN','Imposible','Posible solamente de manera inalámbrica'], correct: 1 },
+  { module: 'SAD03', q: 'Las zonas DMZ:', opts: ['Están dentro de la LAN','Están fuera del perímetro de red','Están dentro del perímetro de red','Están entre el perímetro de red y el router frontera'], correct: 2 },
+  { module: 'SAD03', q: 'L2TP es un protocolo:', opts: ['Más antiguo que PPTP','De nivel de red','De nivel 3','De nivel 2'], correct: 3 },
+  { module: 'SAD03', q: 'Las VPN atraviesan fácilmente los routers. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD03', q: 'La frase correcta es:', opts: ['La seguridad perimetral determina la política de seguridad','La política de seguridad determina la seguridad perimetral','La seguridad perimetral la establecen los ISP','La seguridad perimetral no depende de la política de seguridad'], correct: 1 },
+  { module: 'SAD03', q: 'Un firewall:', opts: ['Puede ser un router','Está en la DMZ','Está siempre fuera de la LAN','Está siempre dentro de la LAN'], correct: 0 },
+  { module: 'SAD03', q: 'Las comunicaciones de un país entero pueden depender de un solo router frontera. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD03', q: 'SSH utiliza:', opts: ['Cifrado simétrico','Cifrado de clave secreta','Cifrado asimétrico','Cifrado de clave privada'], correct: 2 },
+  { module: 'SAD03', q: 'La política de seguridad más restrictiva es:', opts: ['El permiso establecido','Permitir todo lo que no esté específicamente prohibido','La negociación preestablecida','Especificar solamente lo prohibido'], correct: 2 },
+  // SAD04
+  { module: 'SAD04', q: 'En una regla iptables el código –i sirve para:', opts: ['Indicar que es un filtro de entrada','Especificar la interfaz de red por donde entra el paquete','Especificar la interfaz protegida por el firewall','Especificar la interfaz de las pruebas de funcionamiento'], correct: 1 },
+  { module: 'SAD04', q: 'La frase correcta es:', opts: ['Un firewall no puede proteger de las conexiones que no pasen por él','Un firewall es capaz de filtrar todos los paquetes de una LAN','Un firewall protege todos los ataques producidos en la LAN','La configuración de un firewall no se puede cambiar'], correct: 0 },
+  { module: 'SAD04', q: 'Cuando un paquete no llega a su destino y se informa al emisor de las causas:', opts: ['El paquete se ha rechazado','El paquete se ha aceptado','El paquete se ha denegado','El paquete se ha bloqueado'], correct: 0 },
+  { module: 'SAD04', q: 'Para borrar una regla de iptables se utiliza el modificador:', opts: ['F','D','A','L'], correct: 1 },
+  { module: 'SAD04', q: 'Un firewall de nivel de red:', opts: ['Es igual de seguro que uno de nivel de aplicación','Es menos seguro que uno de nivel de aplicación','Es más difícil de usar que uno de nivel de aplicación','Es menos transparente al usuario'], correct: 1 },
+  { module: 'SAD04', q: 'Un firewall se puede clasificar según su área de influencia en:', opts: ['De nivel aplicación o corporativo','Personal o SOHO','Libre o propietario','De filtrado de paquetes'], correct: 1 },
+  { module: 'SAD04', q: 'Una de las principales ventajas de hping es:', opts: ['Que es de libre distribución','Que puede especificar el número de puerto o tipo de protocolo','Que se puede utilizar desde la línea de comandos de Linux','Que es más sencilla de manejar que ping'], correct: 1 },
+  { module: 'SAD04', q: 'Un paquete puede ser aceptado, denegado o rechazado por un firewall. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD04', q: 'Un firewall puede tener interfaz gráfica. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD04', q: 'Un firewall puede ser un router. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD04', q: 'Entre las funciones de un firewall está:', opts: ['Denegar todas las conexiones entrantes','Impedir la ejecución de virus','Crear archivos log','Permitir todas las conexiones salientes'], correct: 2 },
+  { module: 'SAD04', q: 'Para cerrar el acceso al puerto 21 de nuestra máquina se emplea:', opts: ['iptables -A INPUT -p 21 --dport -j DROP L2TP','iptables -A INPUT -p tcp --dport 21 -j DROP','iptables -A INPUT 21 tcp --dport XXXX -j DROP','iptables -A INPUT -p tcp --dport XXXX -j DROP'], correct: 1 },
+  { module: 'SAD04', q: 'Los paquetes que atraviesan un firewall pueden ser filtrados:', opts: ['Solo por las direcciones IPv4 destino','Solamente por las direcciones IP','Solo por los puertos UDP de destino','Por los datos de la cabecera del paquete'], correct: 3 },
+  { module: 'SAD04', q: 'Un paquete puede ser aceptado o rechazado por un firewall (solo dos opciones). ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD04', q: 'Los registros log reflejan:', opts: ['Todo lo que ocurre con los paquetes al atravesar el firewall','Solamente los incidentes perjudiciales para el dispositivo','Los datos de las direcciones bloqueadas','Lo que se les exija en la configuración'], correct: 3 },
+  { module: 'SAD04', q: 'Un cortafuegos integrado es el que forma parte del sistema operativo. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD04', q: 'Los mensajes recogidos por el log de iptables:', opts: ['Siempre se graban en un fichero llamado iptables.txt','Siempre se graban en un fichero denominado iptables.log','Los emite el kernel de linux','Solamente se graban si perjudican al sistema'], correct: 2 },
+  { module: 'SAD04', q: 'Todo el tráfico que salga de la red interna debe ser filtrado por el cortafuegos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD04', q: 'Los cortafuegos que actúan en el nivel 3 son:', opts: ['Solamente los propietarios','Solamente los híbridos','Los de nivel aplicación','Los de filtrado de paquetes'], correct: 3 },
+  { module: 'SAD04', q: 'El funcionamiento de un firewall se puede probar con:', opts: ['Solamente con hping','Solamente con nmap, hping, netstat','nmap, hping, ping, netstat','nmap'], correct: 2 },
+  // SAD05
+  { module: 'SAD05', q: 'La línea http_port 1.1.1.1:3128 escrita en el fichero squid.conf:', opts: ['Especifica una IP no permitida en el proxy','Deniega la conexión a la IP por el puerto 3128','Deniega la conexión a todos los equipos por el puerto 3128','Especifica la interfaz por la que escucha el proxy'], correct: 3 },
+  { module: 'SAD05', q: 'Para determinar la ubicación de un firewall no es necesario conocer la situación de los demás servicios proporcionados por la red. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD05', q: 'Cuando se utiliza un proxy transparente:', opts: ['En el cliente no se especifica nada','La puerta de enlace del cliente es la del router','En el proxy se debe crear una regla iptables','El cliente puede poner cualquier puerta de enlace'], correct: 2 },
+  { module: 'SAD05', q: 'http_access:', opts: ['Permite el almacenamiento de una web en caché','Crea un usuario con acceso al proxy','Se utiliza para habilitar una acl','Crea una lista de acceso'], correct: 2 },
+  { module: 'SAD05', q: 'El módulo de software que se utiliza en la autenticación de usuarios con Squid es:', opts: ['basic program','ncsa_auth','auth','squid.conf'], correct: 1 },
+  { module: 'SAD05', q: 'El proxy abierto es más seguro que el anónimo. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD05', q: 'Squid:', opts: ['Es el único software libre para instalar un proxy','Es un software que permite instalar un servidor proxy','Es el único software que permite instalar un proxy','Es un software gratuito pero no libre'], correct: 1 },
+  { module: 'SAD05', q: 'Un proxy anónimo es más utilizado por administradores que por clientes del sistema. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD05', q: 'La línea cache_dir ufs /var/arubio/squid 10 16 256:', opts: ['Especifica el tamaño de la memoria caché del servidor proxy','Especifica que la memoria caché se almacenará en el fichero squid','Está mal construida','Especifica el sitio y el tamaño de la memoria caché'], correct: 3 },
+  { module: 'SAD05', q: 'Las acls:', opts: ['No se utilizan en los proxies','Se utilizan solamente para permitir conexiones','Se utilizan para filtrar conexiones','Evitan las conexiones'], correct: 2 },
+  { module: 'SAD05', q: 'El parámetro empleado en squid.conf para poder requerir autenticación a los usuarios es:', opts: ['aut_param','aut_parm','auth_parm','auth_param'], correct: 3 },
+  { module: 'SAD05', q: 'La línea htpasswd -c /etc/squid/uno dos:', opts: ['Se escribe en squid.conf','Añade el usuario dos al fichero uno','Añade el usuario dos al fichero uno (con -c crea)','Añade el usuario uno con contraseña dos a squid'], correct: 1 },
+  { module: 'SAD05', q: 'Cuando se quiere compartir una conexión a Internet entre varios clientes:', opts: ['Se usa un firewall','Se usa un proxy NAT','Se usa un router de nivel 2','Se usa un dispositivo de nivel 2'], correct: 1 },
+  { module: 'SAD05', q: 'El Host Virtual:', opts: ['Es un equipo fuera del proxy','Es un equipo que forma parte del proxy','Configuración que se hace en los proxies inversos','Son equipos de la red interna'], correct: 2 },
+  { module: 'SAD05', q: 'Un proxy:', opts: ['Solamente puede trabajar con protocolos de nivel 5','Trabaja con los mismos protocolos que un gateway','Trabaja con protocolos de nivel 3','Puede trabajar con protocolos de nivel 7'], correct: 3 },
+  { module: 'SAD05', q: 'Los tres componentes básicos de un proxy son:', opts: ['Las acl y squid.conf','El registro squid.conf y el access.log','Reglas de filtrado, listas de acceso y http_access','Elementos destino, elementos cliente y reglas de acceso'], correct: 3 },
+  { module: 'SAD05', q: 'Un proxy puede proporcionar direcciones IP. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD05', q: 'Una acl para controlar una URL contiene el parámetro:', opts: ['src','dstdomain (sustituyendo acl)','No es posible','dstdomain'], correct: 3 },
+  { module: 'SAD05', q: 'La línea acl nunca src 10.10.10.0/255.0.0.0 incluida en squid.conf:', opts: ['Crea una lista de acceso','Ejecuta una lista de acceso creada con http_access','Prohibe el acceso al proxy a todos los equipos con IP de tipo A','Permite la entrada al proxy al equipo con IP 10.10.10.10'], correct: 0 },
+  { module: 'SAD05', q: 'En el archivo log de squid solamente debo fijarme en los mensajes que comiencen por TCP_DENIED. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  // SAD06
+  { module: 'SAD06', q: 'El middleware:', opts: ['Proporciona un interfaz de comunicación entre usuarios y clúster','Es el software del balanceador','No forma parte de un clúster','Es el software que comunica al router con el balanceador'], correct: 0 },
+  { module: 'SAD06', q: 'Kerio es un firewall pero no permite balanceo de cargas. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD06', q: 'Un SAI:', opts: ['No contribuye a la duplicidad','Duplica la conexión a Internet','No duplica, refuerza','Es una medida que duplica'], correct: 3 },
+  { module: 'SAD06', q: 'El objetivo de la alta disponibilidad es:', opts: ['Evitar que haya virtualización de servidores','Evitar que un sistema crítico se pare','Duplicar las líneas de conexión a Internet','Evitar que un sistema tenga tiempos de inactividad'], correct: 1 },
+  { module: 'SAD06', q: 'Un clúster:', opts: ['Es un grupo de dispositivos','Es un balanceador de carga','Es un servidor','Es un servidor redundante'], correct: 0 },
+  { module: 'SAD06', q: 'El huésped puede utilizar varias interfaces de red. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD06', q: 'La alta disponibilidad:', opts: ['Duplica líneas de alimentación','Es sólo para sistemas hardware','Minimiza el número de servidores','Se refiere a sistema software'], correct: 0 },
+  { module: 'SAD06', q: 'RAID es un ejemplo de servidor redundante. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD06', q: 'El balanceo de carga:', opts: ['Impide determinadas conexiones','Se utiliza para copias de respaldo','Filtra las comunicaciones','Distribuye el trabajo'], correct: 3 },
+  { module: 'SAD06', q: 'El tipo de balanceo de carga más rápido es:', opts: ['CLUTER','NAT','TUN','DR'], correct: 3 },
+  { module: 'SAD06', q: 'Un sistema de alta disponibilidad hace que no haya tiempos inactivos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD06', q: 'La paravirtualización:', opts: ['Permite la comunicación del sistema huésped con el hardware del anfitrión','El sistema operativo anfitrión conoce los drivers del hardware','Consiste en unir dos máquinas virtuales','No permite el acceso directo al hardware del anfitrión'], correct: 0 },
+  { module: 'SAD06', q: 'La integridad en los datos:', opts: ['No es importante en las soluciones de alta disponibilidad','Solo afecta a sistemas de bases de datos','Afecta al funcionamiento del sistema','Afecta solamente a aquellos sistemas que almacenan datos en tablas'], correct: 2 },
+  { module: 'SAD06', q: 'Un huésped en el que se gestionan tres tarjetas de red virtuales, no es posible. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD06', q: 'Un sistema de alta disponibilidad es lo mismo que un sistema tolerante a fallos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD06', q: 'En un clúster, el balanceador de carga y los servidores virtuales:', opts: ['Tienen la misma dirección IP virtual','Tienen la misma dirección IP real','No se comunican','Tienen diferente dirección IP virtual'], correct: 0 },
+  { module: 'SAD06', q: 'Un sistema crítico:', opts: ['Es un sistema importante','Es un sistema peligroso','Es un sistema peligroso importante','Es un sistema imprescindible'], correct: 3 },
+  { module: 'SAD06', q: 'NAT y ROUND ROBIN:', opts: ['NAT es el tipo de algoritmo de balanceo','Son opciones de una misma variable','NAT es el tipo de algoritmo y ROUND ROBIN el tipo de balanceo','ROUND ROBIN es el tipo de algoritmo de balanceo'], correct: 3 },
+  { module: 'SAD06', q: 'Lo ideal es que un sistema crítico, a lo sumo esté parado:', opts: ['5 segundos por día','5 minutos por día','5 horas al año','5 minutos por año'], correct: 3 },
+  { module: 'SAD06', q: 'El balanceador de carga:', opts: ['Es un dispositivo hardware','Es software','Forma parte del clúster','Está fuera del clúster'], correct: 2 },
+  // SAD07
+  { module: 'SAD07', q: 'Los datos regulados por el RGPD:', opts: ['Deben ser datos de organismos privados','Están en cualquier soporte que facilite el tratamiento posterior','Deben ser datos de organismos públicos','Deben estar en papel'], correct: 1 },
+  { module: 'SAD07', q: 'Un organismo público no puede ser sancionado por el mal uso de datos personales. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'Los CERT son organismos públicos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD07', q: 'Los CERT son organismos privados. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'Según la LOPDGDD, las infracciones se clasifican en tres niveles:', opts: ['Baja, media y alta','Leve, grave y muy grave','Básica, media y alta','Leve, media y alta'], correct: 1 },
+  { module: 'SAD07', q: '¿Qué nombre recibe toda operación que se realice sobre datos personales?', opts: ['Tratamiento','Manipulación','Modificación','Registro'], correct: 0 },
+  { module: 'SAD07', q: 'El CERT relacionado con los cuerpos de seguridad del Estado es:', opts: ['INCIBE-CERT','EGC Group','IRIS-CERT','CCN-CERT'], correct: 3 },
+  { module: 'SAD07', q: 'Las normas ISO de seguridad informática son:', opts: ['Las de la serie 72001','De la 27001 a la 27019','Las de la serie 27000','Las 9011'], correct: 2 },
+  { module: 'SAD07', q: 'Una persona física no puede ser sancionada por el mal uso de los datos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'Para reportar incidencias a un CERT:', opts: ['No se puede, es imposible','Es necesario registrarse primero y ser autorizado','Es necesario solamente tener una conexión a Internet','No hace falta ningún requisito'], correct: 1 },
+  { module: 'SAD07', q: 'La LOPDGDD afecta a ficheros en soporte:', opts: ['De audio','Electrónico','Cualquier soporte','Papel'], correct: 2 },
+  { module: 'SAD07', q: 'Los mensajes de texto recibidos en teléfonos móviles no están sujetos a la LSSI. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'El deber de guardar secreto está regulado en la LSSI. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'El RGPD entró en vigor en:', opts: ['2016','2019','2017','2018'], correct: 3 },
+  { module: 'SAD07', q: 'El tratamiento inadecuado de los datos puede llevar sanciones de hasta 6000 euros. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'En España:', opts: ['Solamente hay un CERT','Los CERT ya no son necesarios porque se han agrupado en Europa','El CERT se denomina EGC Group','Existen varios CERT'], correct: 3 },
+  { module: 'SAD07', q: 'Las cuatro fases de un PDCA son:', opts: ['P, C, B, A','Planificar, hacer, verificar y actuar','Diseño, programación, implantación y modificación','P, D, A, V'], correct: 1 },
+  { module: 'SAD07', q: 'La AEPD es la Agencia Española de Protección de Datos. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 0 },
+  { module: 'SAD07', q: 'En el EGC Group hay varios CERT españoles. ¿Verdadero o falso?', opts: ['Verdadero','Falso'], correct: 1 },
+  { module: 'SAD07', q: 'Para destruir los datos personales de la Administración Pública:', opts: ['Lo puede hacer tanto el responsable de tratamiento como una empresa de destrucción de documentos','Solo lo puede hacer la persona responsable del tratamiento','No ha sido especificada dicha circunstancia','Lo puede hacer cualquier persona de la Administración Pública'], correct: 0 },
+];
+
+const MODULES = ['SAD01','SAD02','SAD03','SAD04','SAD05','SAD06','SAD07'];
+const MODULE_NAMES = {
+  'SAD01': 'Seguridad Informática. Fundamentos',
+  'SAD02': 'Amenazas y Ataques',
+  'SAD03': 'Seguridad Perimetral',
+  'SAD04': 'Cortafuegos (Firewalls)',
+  'SAD05': 'Proxy y Squid',
+  'SAD06': 'Alta Disponibilidad',
+  'SAD07': 'Legislación y Normativa',
+};
+
+let currentQuestions = [];
+let currentIndex = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let skipCount = 0;
+let answered = false;
+let wrongItems = [];
+let currentMode = 'all';
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Build module selector
+function buildModuleSelector() {
+  const list = document.getElementById('module-list');
+  list.innerHTML = '';
+  MODULES.forEach(mod => {
+    const count = ALL_QUESTIONS.filter(q => q.module === mod).length;
+    const card = document.createElement('div');
+    card.className = 'module-card';
+    card.innerHTML = `
+      <div>
+        <div class="mod-label">${mod}</div>
+        <h3>${MODULE_NAMES[mod]}</h3>
+      </div>
+      <div class="mod-count">${count} preguntas</div>
+    `;
+    card.onclick = () => startQuiz(mod);
+    list.appendChild(card);
+  });
+}
+
+function startQuiz(mode) {
+  currentMode = mode;
+  const pool = mode === 'all' ? ALL_QUESTIONS : ALL_QUESTIONS.filter(q => q.module === mode);
+  currentQuestions = shuffle(pool);
+  currentIndex = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  skipCount = 0;
+  wrongItems = [];
+
+  document.getElementById('module-selector').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('header-score').style.display = 'flex';
+
+  updateHeaderScore();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = currentQuestions[currentIndex];
+  const total = currentQuestions.length;
+
+  document.getElementById('q-num').textContent = `PREGUNTA ${currentIndex + 1} / ${total}`;
+  document.getElementById('q-module').textContent = q.module;
+
+  const qText = document.getElementById('q-text');
+  qText.textContent = q.q;
+  qText.className = 'question-text question-enter';
+
+  const letters = ['a','b','c','d','e'];
+  const optsDiv = document.getElementById('q-options');
+  optsDiv.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}.</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    optsDiv.appendChild(btn);
+  });
+
+  document.getElementById('feedback-box').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-skip').style.display = 'inline-block';
+
+  updateProgress();
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = currentQuestions[currentIndex];
+  const btns = document.querySelectorAll('.option-btn');
+
+  document.getElementById('btn-skip').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    if (i === idx && idx !== q.correct) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('feedback-box');
+  const fbLabel = document.getElementById('fb-label');
+  const fbText = document.getElementById('fb-text');
+
+  if (idx === q.correct) {
+    correctCount++;
+    fb.className = 'feedback-box correct-fb';
+    fbLabel.textContent = '✓ Correcto';
+    fbText.textContent = `Respuesta: ${q.opts[q.correct]}`;
+    fb.style.display = 'block';
+  } else {
+    wrongCount++;
+    wrongItems.push({ q: q.q, your: q.opts[idx], correct: q.opts[q.correct] });
+    fb.className = 'feedback-box wrong-fb';
+    fbLabel.textContent = '✗ Incorrecto';
+    fbText.textContent = `La respuesta correcta es: ${q.opts[q.correct]}`;
+    fb.style.display = 'block';
+  }
+
+  updateHeaderScore();
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= currentQuestions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function skipQuestion() {
+  skipCount++;
+  currentIndex++;
+  if (currentIndex >= currentQuestions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function updateProgress() {
+  const pct = (currentIndex / currentQuestions.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function updateHeaderScore() {
+  document.getElementById('h-correct').textContent = correctCount;
+  document.getElementById('h-wrong').textContent = wrongCount;
+  document.getElementById('h-current').textContent = currentIndex + 1;
+  document.getElementById('h-total').textContent = currentQuestions.length;
+}
+
+function showResults() {
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  document.getElementById('header-score').style.display = 'none';
+
+  const total = currentQuestions.length;
+  const pct = Math.round((correctCount / total) * 100);
+
+  document.getElementById('res-pct').textContent = pct + '%';
+  document.getElementById('res-correct').textContent = correctCount;
+  document.getElementById('res-wrong').textContent = wrongCount;
+  document.getElementById('res-skip').textContent = skipCount;
+
+  let title = ''; let sub = '';
+  if (pct >= 90) { title = '¡Excelente!'; sub = 'Dominas el tema perfectamente.'; }
+  else if (pct >= 70) { title = 'Muy bien'; sub = 'Estás cerca del dominio total.'; }
+  else if (pct >= 50) { title = 'Aprobado'; sub = 'Repasa los conceptos fallidos.'; }
+  else { title = 'A estudiar más'; sub = 'Revisa los temas y vuelve a intentarlo.'; }
+
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-sub').textContent = `${correctCount} de ${total} correctas · ${sub}`;
+
+  // Wrong review
+  const wr = document.getElementById('wrong-review');
+  wr.innerHTML = '';
+  if (wrongItems.length > 0) {
+    wr.innerHTML = `<h3>✗ Preguntas falladas (${wrongItems.length})</h3>`;
+    wrongItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'wrong-item';
+      div.innerHTML = `
+        <div class="wi-question">${item.q}</div>
+        <div class="wi-your">Tu respuesta: ${item.your}</div>
+        <div class="wi-correct">Correcta: ${item.correct}</div>
+      `;
+      wr.appendChild(div);
+    });
+  }
+}
+
+function retryQuiz() {
+  startQuiz(currentMode);
+}
+
+function showMenu() {
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('module-selector').style.display = 'flex';
+  document.getElementById('header-score').style.display = 'none';
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+function goBack() {
+  showMenu();
+}
+
+buildModuleSelector();
+</script>
+</body>
+</html>
